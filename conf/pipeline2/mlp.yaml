@@ -1,0 +1,26 @@
+_target_: hydra_sklearn_pipeline.make_pipeline
+
+steps:
+    - Scale:
+        _target_: noop.NoOp
+        # params here
+
+    - Transform:
+        _target_: noop.NoOp
+
+    - Reduce:
+        _target_: noop.NoOp
+
+    - Select:
+        _target_: noop.NoOp
+
+    - Model:
+        _target_: sklearn.neural_network.MLPClassifier
+        hidden_layer_sizes: [128, 64, 32, 16]
+        activation: relu
+        solver: adam
+        alpha: 0.0001
+        batch_size: 32
+        learning_rate_init: 0.001
+        max_iter: 200
+        early_stopping: true

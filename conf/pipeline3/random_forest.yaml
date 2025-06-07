@@ -1,0 +1,27 @@
+_target_: hydra_sklearn_pipeline.make_pipeline
+
+steps:
+    - Scale:
+        _target_: noop.NoOp
+        # params here
+
+    - Transform:
+        _target_: noop.NoOp
+
+    - Reduce:
+        _target_: noop.NoOp
+
+    - Select:
+        _target_: noop.NoOp
+
+    - Model:
+        _target_: sklearn.ensemble.RandomForestClassifier
+        n_estimators: 100
+        max_depth: 10
+        min_samples_split: 2
+        min_samples_leaf: 1
+        max_features: 'sqrt'
+        bootstrap: true
+        random_state: 42
+
+    
