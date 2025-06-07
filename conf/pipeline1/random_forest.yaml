@@ -1,4 +1,4 @@
-_target_: hydra_sklearn_pipeline.make_pipeline
+_target_: pipeline.make_pipeline
 
 steps:
     - Scale:

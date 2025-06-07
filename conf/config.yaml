@@ -1,7 +1,8 @@
+# @package: _global_
 defaults:
-  - pipeline1: svm
-  - pipeline2: logistic_regression
-  - pipeline3: random_forest
+  #- pipeline1: svm
+  #- pipeline2: logistic_regression
+  - pipeline3: svm
   - _self_
 
 data_loader: data.data_loader.DataLoader
