@@ -2,6 +2,9 @@ from hydra.utils import get_class, instantiate
 from omegaconf import DictConfig
 import utils
 
+import re
+
+
 class Builder:
     def __init__(self, cfg: DictConfig):
         # config
@@ -25,8 +28,21 @@ class Builder:
         
         for k in cfg:
             if k.startswith("pipeline"):
-                self.pipelines.append(instantiate(cfg[k], _recursive_=False)) # False as each step is instantiated in pipeline.py
-                self.pipeline_names.append(k)
+                pipeline = instantiate(cfg[k], _recursive_=False)
+                self.pipelines.append(pipeline)
+                
+                # Below tries to name the pipline as 'pipe' + pipeline_num + '-' + 'model_name'
+                match = re.search(r'pipeline(\d+)', k)
+                pipeline_num = match.group(1) if match else "X"
+                model = None
+                if hasattr(pipeline, 'named_steps') and 'model' in pipeline.named_steps:
+                    model = pipeline.named_steps['model']
+                elif hasattr(pipeline, 'steps'):
+                    model = pipeline.steps[-1][1]
+                model_name = type(model).__name__ if model is not None else 'UnknownModel'
+                pipeline_name = f"pipe{pipeline_num}-{model_name}"
+                
+                self.pipeline_names.append(pipeline_name)
 
         self.plot = cfg.params.plot
         self.print_all_eval = cfg.params.print_all_eval
@@ -70,24 +86,23 @@ class Builder:
             else:
                 evaluator.print_metrics(pipeline=pipeline_name, corp=self.corp_to_plot, print_average=True)
 
-            # Plot    
-            if self.plot and self.compare_corpora:
-                evaluator.plot_pr_curves(pipeline=pipeline_name, plot_all_corps=True)
-                evaluator.plot_box(pipeline=pipeline_name, plot_all_corps=True)
-            elif self.plot:
-                evaluator.plot_pr_curves(pipeline=pipeline_name, corp=self.corp_to_plot)
-                evaluator.plot_box(pipeline=pipeline_name, corp=self.corp_to_plot)
+            # Plot for the pipeline if we are not comparing with other pipeline     
+            if self.plot and (not self.compare_pipelines):
+                if self.compare_corpora:
+                    evaluator.plot_pr_curves(pipeline=pipeline_name, plot_all_corps=True)
+                    evaluator.plot_box(pipeline=pipeline_name, plot_all_corps=True)
+                else:
+                    evaluator.plot_pr_curves(pipeline=pipeline_name, corp=self.corp_to_plot)
+                    evaluator.plot_box(pipeline=pipeline_name, corp=self.corp_to_plot)
 
             if not self.compare_pipelines:
                 return
         
-        if not self.compare_pipelines:
-            return
-        else:
+        if self.plot and self.compare_pipelines:
             # Plot    
-            if self.plot and self.compare_corpora:
+            if self.compare_corpora:
                 evaluator.plot_pr_curves(plot_all_corps=True, plot_all_pipelines=True)
-                evaluator.plot_box(plot_all_corps=True, plot_all_pipelines=True)
-            elif self.plot:
+                #evaluator.plot_box(plot_all_corps=True, plot_all_pipelines=True)
+            else:
                 evaluator.plot_pr_curves(corp=self.corp_to_plot, plot_all_pipelines=True)
                 evaluator.plot_box(corp=self.corp_to_plot, plot_all_pipelines=True)

@@ -146,27 +146,7 @@ class Evaluator:
         """
         if plot_all_pipelines:
             if plot_all_corps:
-                # Plot all corpora of all pipelines (each pipeline in a separate figure)
-                for pipe in self.results_plot:
-                    data = []
-                    xticks = []
-                    for corp_name in self.results_plot[pipe]:
-                        res = self.results_plot[pipe][corp_name]
-                        data.append(res['wer_low'])
-                        data.append(res['wer_high'])
-                        xticks.extend([f"{corp_name}-Low", f"{corp_name}-High"])
-                    plt.figure(figsize=(10, 6))
-                    box = plt.boxplot(data, patch_artist=True)
-                    for i, patch in enumerate(box['boxes']):
-                        patch.set(facecolor='lightblue' if i % 2 == 0 else 'lightcoral')
-                    plt.axhline(y=self.class_threshold, color='green', linestyle='--', label='Class Threshold')
-                    plt.xticks(range(1, len(xticks) + 1), xticks, rotation=45)
-                    plt.title(f'WER Distribution - {pipe}')
-                    plt.ylabel('Word Error Rate (WER)')
-                    plt.legend()
-                    plt.grid(axis='y')
-                    plt.tight_layout()
-                    plt.show()
+                return # would be too much
             elif corp:
                 # Plot all pipelines for a specific corpus (all pipelines in one figure)
                 data = []
@@ -181,6 +161,8 @@ class Evaluator:
                 box = plt.boxplot(data, patch_artist=True)
                 for i, patch in enumerate(box['boxes']):
                     patch.set(facecolor='lightblue' if i % 2 == 0 else 'lightcoral')
+                for patch in box['medians']:
+                    patch.set(color='purple', linewidth=3)
                 plt.axhline(y=self.class_threshold, color='green', linestyle='--', label='Class Threshold')
                 plt.xticks(range(1, len(xticks) + 1), xticks, rotation=45)
                 plt.title(f'WER Distribution - {corp} (all pipelines)')
@@ -188,6 +170,10 @@ class Evaluator:
                 plt.legend()
                 plt.grid(axis='y')
                 plt.tight_layout()
+                # Add jittered scatter
+                for i, data_arr in enumerate(data):
+                    x = np.random.normal(i + 1, 0.04, size=len(data_arr))
+                    plt.plot(x, data_arr, 'o', alpha=0.5, markersize=6, color='gray')
                 plt.show()
             else:
                 raise ValueError("When plot_all_pipelines, either a corp must be given or plot_all_corps must be true!")
@@ -206,6 +192,8 @@ class Evaluator:
                 box = plt.boxplot(data, patch_artist=True)
                 for i, patch in enumerate(box['boxes']):
                     patch.set(facecolor='lightblue' if i % 2 == 0 else 'lightcoral')
+                for patch in box['medians']:
+                    patch.set(color='purple', linewidth=3)
                 plt.axhline(y=self.class_threshold, color='green', linestyle='--', label='Class Threshold')
                 plt.xticks(range(1, len(xticks) + 1), xticks, rotation=45)
                 plt.title(f'WER Distribution - {pipeline}')
@@ -213,6 +201,10 @@ class Evaluator:
                 plt.legend()
                 plt.grid(axis='y')
                 plt.tight_layout()
+                # Add jittered scatter
+                for i, data_arr in enumerate(data):
+                    x = np.random.normal(i + 1, 0.04, size=len(data_arr))
+                    plt.plot(x, data_arr, 'o', alpha=0.5, markersize=6, color='gray')
                 plt.show()
             elif corp:
                 # Plot one corpus for one pipeline (one figure)
@@ -223,6 +215,8 @@ class Evaluator:
                 box = plt.boxplot(data, patch_artist=True)
                 for i, patch in enumerate(box['boxes']):
                     patch.set(facecolor='lightblue' if i == 0 else 'lightcoral')
+                for patch in box['medians']:
+                    patch.set(color='purple', linewidth=3)
                 plt.axhline(y=self.class_threshold, color='green', linestyle='--', label='Class Threshold')
                 plt.xticks([1, 2], xticks, rotation=45)
                 plt.title(f'WER Distribution - {pipeline} - {corp}')
@@ -230,6 +224,10 @@ class Evaluator:
                 plt.legend()
                 plt.grid(axis='y')
                 plt.tight_layout()
+                # Add jittered scatter
+                for i, data_arr in enumerate(data):
+                    x = np.random.normal(i + 1, 0.04, size=len(data_arr))
+                    plt.plot(x, data_arr, 'o', alpha=0.5, markersize=6, color='gray')
                 plt.show()
             else:
                 raise ValueError("When pipeline given, either a corp must be given or plot_all_corps must be true!")
