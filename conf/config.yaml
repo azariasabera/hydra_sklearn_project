@@ -10,11 +10,14 @@ data_splitter: data.data_splitter.DataSplitter
 
 params:
   duration_threshold: 0.3 # seconds
+  class_threshold: 0.3
+  decision_threshold: 0.65 # to classify the predict_proba as class 1 or 0
   include_opensmile: false
   compare_corpora: false
-  compare_pipelines: true
-  plot: true
-  print_eval: true
+  compare_pipelines: false
+  plot: true # plot the results or not
+  print_all_eval: false # if true prints evaluation for all corpus as test datasets
+  corp_to_plot: WAR # change to BER, LUC, SOD, WAR (to plot all, make compare_corpora true)
 
 files:
   main_data: all_aclew_data_ds_notext.csv # includes highlevel features like snr, c50, etc.

@@ -1,10 +1,9 @@
-import hydra
-from omegaconf import DictConfig, OmegaConf
-from hydra.utils import instantiate
+from hydra.utils import get_class, instantiate
+from omegaconf import DictConfig
+import utils
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import precision_recall_curve, auc
-
+from sklearn.metrics import precision_score, recall_score, f1_score, precision_recall_curve, auc
 
 class Builder:
     def __init__(self, cfg: DictConfig):
@@ -13,8 +12,8 @@ class Builder:
         #print(OmegaConf.to_yaml(cfg))
         
         # Load data using DataLoader and DataSplitter
-        DataLoader = hydra.utils.get_class(cfg.data_loader)
-        DataSplitter = hydra.utils.get_class(cfg.data_splitter)
+        DataLoader = get_class(cfg.data_loader)
+        DataSplitter = get_class(cfg.data_splitter)
 
         self.data_loader = DataLoader(config=cfg, csv_file=cfg.paths.main_path)
         self.data_splitter = DataSplitter(config=cfg)
@@ -31,31 +30,74 @@ class Builder:
             if k.startswith("pipeline"):
                 self.pipelines.append(instantiate(cfg[k], _recursive_=False)) # False as each step is instantiated in pipeline.py
                 self.pipeline_names.append(k)
-                print(type(self.pipelines[-1]))
 
         self.plot = cfg.params.plot
-        self.print_eval = cfg.params.print_eval
+        self.print_all_eval = cfg.params.print_all_eval
+        self.class_threshold = self.cfg.params.class_threshold
+        self.decision_threshold = self.cfg.params.decision_threshold
+        self.compare_corpora = self.cfg.params.compare_corpora
+        self.compare_pipelines = self.cfg.params.compare_pipelines
+        self.corp_to_plot = self.cfg.params.corp_to_plot
 
     def build_and_compare(self):
-        if getattr(self.cfg.params, "compare_corpora", False): # better than 'if self.cfg.params.compare_corpora':
-            self._compare_corpora()
-        elif (len(self.pipelines) > 1 and getattr(self.cfg.params, "compare_pipelines", False)):
-            self._compare_pipelines()
-        elif len(self.pipelines) >= 1: # takes the first pipeline only
-            self._single_pipeline_workflow()
+        if len(self.pipelines) < 1:
+            raise ValueError("No pipeline given. Add a pipeline configuration in `defaults` in config.yaml")
+        elif getattr(self.cfg.params, "compare_pipelines", False) and len(self.pipelines) < 2:
+            raise ValueError("Invalid configuration: compare_piplines is true but not enough pipelines given! Check config.yaml")
         else:
-            raise ValueError("Invalid configuration: at least one pipeline must be defined.")
+            build_evaluation(self)
+    
+    def build_evaluation(self):
+        evaluator = utils.Evaluator(
+            class_threshold=self.class_threshold,
+            decision_threshold=self.decision_threshold,
+            plot=self.plot,
+            compare_corpora=self.compare_corpora,
+            compare_pipelines=self.compare_pipelines
+        )
         
-    def _compare_pipelines(self):
-        print('compared pipelines')
+        for pipeline, pipeline_name in zip(self.pipelines, self.pipeline_names):
+            for corp, data in self.splits.items():
+                y_train_bin = data['wer_train'] < self.cfg.params.class_threshold
+                pipeline.fit(data['X_train'], y_train_bin)
+                y_proba = pipeline.predict_proba(data['X_test'])
 
-    def _single_pipeline_workflow(self):
-        print('evaluated single pipeline')
-        for corp, data in self.splits.items():
-            y_bin = data['wer_train'] < 0.3
-            self.pipelines[0].fit(data['X_train'], y_bin)
-            y_pred = self.pipelines[0].predict_proba(data['X_test'])
-            print(y_pred[:1])
+                evaluator.evaluate(
+                    y_test=data['wer_test'],
+                    y_proba=y_proba,
+                    corp=corp,
+                    pipeline=pipeline_name
+                )
 
-    def _compare_corpora(self):
-        print('compared corpora')
+            # Print
+            if self.print_all_eval:
+                evaluator.print_metrics(pipeline=pipeline_name, print_all=True, print_average=True)
+            else:
+                evaluator.print_metrics(pipeline=pipeline_name, corp=self.corp_to_plot, print_average=True)
+
+            # Plot    
+            if self.plot and self.compare_corpora:
+                evaluator.plot_pr_curves(pipeline=pipeline_name, plot_all_corps=True)
+                evaluator.plot_box(pipeline=pipeline_name, plot_all_corps=True)
+            elif self.plot:
+                evaluator.plot_pr_curves(pipeline=pipeline_name, corp=self.corp_to_plot)
+                evaluator.plot_box(pipeline=pipeline_name, corp=self.corp_to_plot)
+
+            if not self.compare_pipelines:
+                return
+        
+        if not self.compare_pipelines:
+            return
+        else:
+            if self.print_all_eval:
+                evaluator.print_metrics(pipeline=pipeline_name, print_all=True, print_average=True)
+            else:
+                evaluator.print_metrics(pipeline=pipeline_name, corp=self.corp_to_plot, print_average=True)
+
+            # Plot    
+            if self.plot and self.compare_corpora:
+                evaluator.plot_pr_curves(pipeline=pipeline_name, plot_all_corps=True)
+                evaluator.plot_box(pipeline=pipeline_name, plot_all_corps=True)
+            elif self.plot:
+                evaluator.plot_pr_curves(pipeline=pipeline_name, corp=self.corp_to_plot)
+                evaluator.plot_box(pipeline=pipeline_name, corp=self.corp_to_plot)
