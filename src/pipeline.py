@@ -1,4 +1,4 @@
-import hydra
+from hydra.utils import instantiate
 from omegaconf import DictConfig
 from sklearn.pipeline import Pipeline
 
@@ -21,7 +21,7 @@ def make_pipeline(steps: DictConfig) -> Pipeline:
         name, target = step.items()[0]
 
         # instantiate step, and append to step_tuples
-        pipeline_step = (name, hydra.utils.instantiate(target))
+        pipeline_step = (name, instantiate(target))
         step_tuples.append(pipeline_step)
 
     return Pipeline(step_tuples)
