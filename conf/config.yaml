@@ -1,0 +1,74 @@
+defaults:
+  - pipeline1: svm
+  - pipeline2: logistic_regression
+  - pipeline3: random_forest
+  - _self_
+
+data_loader: data.data_loader.DataLoader
+data_splitter: data.data_splitter.DataSplitter
+
+params:
+  duration_threshold: 0.3 # seconds
+  include_opensmile: false
+  compare_corpora: false
+  compare_pipelines: true
+  plot: true
+  print_eval: true
+
+files:
+  main_data: all_aclew_data_ds_notext.csv # includes highlevel features like snr, c50, etc.
+  opensmile_data: all_opensmile.functional.csv # includes opensmile features like pitch, energy, etc.
+
+paths:
+  main_path: ${hydra:runtime.cwd}/src/data/${files.main_data}
+  opensmile_path: ${hydra:runtime.cwd}/src/data/${files.opensmile_data}
+  log: ${hydra:runtime.cwd}/src/utils # not finished
+
+data_types:
+  file: str
+  ref_text: str
+  addressee: category
+  speaker: category # double in MATLAB
+  start: float
+  end: float
+  overlap: float
+  text: str
+  confidence_w2v_mean: float
+  confidence_w2v_max: float
+  confidence_w2v_min: float
+  wer: float
+  overall_log_likelihood: float
+  speech_log_likelihood: float
+  phone_duration_deviation: float
+  snr: float
+  c50: float
+  confidence_large_mean: float
+  confidence_large_max: float
+  confidence_large_min: float
+  text_small: str
+  confidence_small_mean: float
+  confidence_small_max: float
+  confidence_small_min: float
+  wer_model_dist: float
+  mean_sound_duration: float
+  min_sound_duration: float
+  max_sound_duration: float
+  duration: float
+  ds: str
+
+
+features:
+  main_features:
+    - c50
+    - confidence_large_mean
+    - confidence_large_max
+    - confidence_large_min
+    - confidence_small_mean
+    - confidence_small_max
+    - confidence_small_min
+    - confidence_w2v_mean
+    - confidence_w2v_max
+    - confidence_w2v_min
+    - duration
+    - snr
+    - wer_model_dist
