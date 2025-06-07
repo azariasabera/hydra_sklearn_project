@@ -1,9 +1,6 @@
 from hydra.utils import get_class, instantiate
 from omegaconf import DictConfig
 import utils
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import precision_score, recall_score, f1_score, precision_recall_curve, auc
 
 class Builder:
     def __init__(self, cfg: DictConfig):
@@ -45,15 +42,13 @@ class Builder:
         elif getattr(self.cfg.params, "compare_pipelines", False) and len(self.pipelines) < 2:
             raise ValueError("Invalid configuration: compare_piplines is true but not enough pipelines given! Check config.yaml")
         else:
-            build_evaluation(self)
+            return self.build_evaluation()
     
     def build_evaluation(self):
         evaluator = utils.Evaluator(
             class_threshold=self.class_threshold,
             decision_threshold=self.decision_threshold,
-            plot=self.plot,
-            compare_corpora=self.compare_corpora,
-            compare_pipelines=self.compare_pipelines
+            plot=self.plot
         )
         
         for pipeline, pipeline_name in zip(self.pipelines, self.pipeline_names):
@@ -89,15 +84,10 @@ class Builder:
         if not self.compare_pipelines:
             return
         else:
-            if self.print_all_eval:
-                evaluator.print_metrics(pipeline=pipeline_name, print_all=True, print_average=True)
-            else:
-                evaluator.print_metrics(pipeline=pipeline_name, corp=self.corp_to_plot, print_average=True)
-
             # Plot    
             if self.plot and self.compare_corpora:
-                evaluator.plot_pr_curves(pipeline=pipeline_name, plot_all_corps=True)
-                evaluator.plot_box(pipeline=pipeline_name, plot_all_corps=True)
+                evaluator.plot_pr_curves(plot_all_corps=True, plot_all_pipelines=True)
+                evaluator.plot_box(plot_all_corps=True, plot_all_pipelines=True)
             elif self.plot:
-                evaluator.plot_pr_curves(pipeline=pipeline_name, corp=self.corp_to_plot)
-                evaluator.plot_box(pipeline=pipeline_name, corp=self.corp_to_plot)
+                evaluator.plot_pr_curves(corp=self.corp_to_plot, plot_all_pipelines=True)
+                evaluator.plot_box(corp=self.corp_to_plot, plot_all_pipelines=True)

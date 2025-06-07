@@ -2,14 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, recall_score, f1_score, precision_recall_curve, auc
 class Evaluator:
-    def __init__(self, class_threshold, boundary_threshold, plot=False):
+    def __init__(self, class_threshold, decision_threshold, plot=False):
         self.class_threshold = class_threshold
-        self.boundary_threshold = boundary_threshold
+        self.decision_threshold = decision_threshold
         self.plot = plot
         self.results = {}  # Store results as {'pipeline' : {'corp': results}}
+        self.results_plot = {} # stores result for plot
 
     def evaluate(self, y_test, y_proba, corp=None, pipeline=None):
-        y_pred = y_proba[:,1] > self.boundary_threshold
+        y_pred = y_proba[:,1] > self.decision_threshold
         y_test_bin = y_test < self.class_threshold
 
         wer_low = y_test[y_pred == 1]
@@ -31,25 +32,29 @@ class Evaluator:
             'f1': f1,
             'mean_low_wer': mean_low_wer,
             'median_low_wer': median_low_wer,
+            'auc': pr_auc
+        }
+        result_plot = {
             'auc': pr_auc,
             'wer_low': wer_low,
             'wer_high': wer_high,
             'precisions': precisions,
-            'recalls': recalls,
+            'recalls': recalls
         }
         
         if pipeline:
             if corp:
-                self.results[pipeline] = {corp: result}
+                if pipeline not in self.results:
+                    self.results[pipeline] = {}
+                    self.results_plot[pipeline] = {}
+                self.results[pipeline][corp] = result
+                self.results_plot[pipeline][corp] = result_plot
             else:
                 raise ValueError("Corpus name ('corp') must be provided when calling evaluate!")
         else:
             raise ValueError("Pipeline name ('pipeline') must be provided when calling evaluate!")
 
-        return result
-
     def print_metrics(self, corp=None, pipeline=None, print_average=False, print_all=False):
-
         if pipeline:
             if corp:
                 res = self.results[pipeline][corp]
@@ -79,9 +84,9 @@ class Evaluator:
         if plot_all_pipelines:
             if plot_all_corps: # plots all corpus of a pipeline in one figure, each pipeline in different figure
                 plt.figure(figsize=(8, 6))
-                for pipeline in self.results:
-                    for corp in self.results[pipeline]:
-                        res = self.results[pipeline][corp]
+                for pipeline in self.results_plot:
+                    for corp in self.results_plot[pipeline]:
+                        res = self.results_plot[pipeline][corp]
                         plt.plot(res['recalls'], res['precisions'], marker='.', label=f"{pipeline}-{corp} (AUC={res['auc']:.3f})")
                 plt.xlabel('Recall')
                 plt.ylabel('Precision')
@@ -92,8 +97,8 @@ class Evaluator:
 
             elif corp: # plots all pipeline in one figure, with the selected corp
                 plt.figure(figsize=(8, 6))
-                for pipeline in self.results:
-                    res = self.results[pipeline][corp]
+                for pipeline in self.results_plot:
+                    res = self.results_plot[pipeline][corp]
                     plt.plot(res['recalls'], res['precisions'], marker='.', label=f"{pipeline}-{corp} (AUC={res['auc']:.3f})")
                 plt.xlabel('Recall')
                 plt.ylabel('Precision')
@@ -108,8 +113,8 @@ class Evaluator:
         elif pipeline:
             if plot_all_corps: # plots all corpus of the selected pipeline
                 plt.figure(figsize=(8, 6))
-                for corp in self.results[pipeline]:
-                    res = self.results[pipeline][corp]
+                for corp in self.results_plot[pipeline]:
+                    res = self.results_plot[pipeline][corp]
                     plt.plot(res['recalls'], res['precisions'], marker='.', label=f"{pipeline}-{corp} (AUC={res['auc']:.3f})")
                 plt.xlabel('Recall')
                 plt.ylabel('Precision')
@@ -120,7 +125,7 @@ class Evaluator:
 
             elif corp: # plots the selected corpus for the selected pipeline
                 plt.figure(figsize=(8, 6))
-                res = self.results[pipeline][corp]
+                res = self.results_plot[pipeline][corp]
                 plt.plot(res['recalls'], res['precisions'], marker='.', label=f"{pipeline}-{corp} (AUC={res['auc']:.3f})")
                 plt.xlabel('Recall')
                 plt.ylabel('Precision')
@@ -134,17 +139,6 @@ class Evaluator:
         else:
             raise ValueError("either specify 'pipeline' or make 'plot_all_pipelines' true")
 
-        plt.figure(figsize=(8, 6))
-        for label in labels:
-            res = self.results[label]
-            plt.plot(res['recalls'], res['precisions'], marker='.', label=f"{label} (AUC={res['auc']:.3f})")
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
-        plt.title('Precision-Recall Curves')
-        plt.legend()
-        plt.grid()
-        plt.show()
-
     def plot_box(self, corp=None, pipeline=None, plot_all_corps=False, plot_all_pipelines=False):
         """
         Flexible box plotter for various comparison scenarios.
@@ -153,11 +147,11 @@ class Evaluator:
         if plot_all_pipelines:
             if plot_all_corps:
                 # Plot all corpora of all pipelines (each pipeline in a separate figure)
-                for pipe in self.results:
+                for pipe in self.results_plot:
                     data = []
                     xticks = []
-                    for corp_name in self.results[pipe]:
-                        res = self.results[pipe][corp_name]
+                    for corp_name in self.results_plot[pipe]:
+                        res = self.results_plot[pipe][corp_name]
                         data.append(res['wer_low'])
                         data.append(res['wer_high'])
                         xticks.extend([f"{corp_name}-Low", f"{corp_name}-High"])
@@ -177,9 +171,9 @@ class Evaluator:
                 # Plot all pipelines for a specific corpus (all pipelines in one figure)
                 data = []
                 xticks = []
-                for pipe in self.results:
-                    if corp in self.results[pipe]:
-                        res = self.results[pipe][corp]
+                for pipe in self.results_plot:
+                    if corp in self.results_plot[pipe]:
+                        res = self.results_plot[pipe][corp]
                         data.append(res['wer_low'])
                         data.append(res['wer_high'])
                         xticks.extend([f"{pipe}-Low", f"{pipe}-High"])
@@ -203,8 +197,8 @@ class Evaluator:
                 # Plot all corpora for a specific pipeline (one figure)
                 data = []
                 xticks = []
-                for corp_name in self.results[pipeline]:
-                    res = self.results[pipeline][corp_name]
+                for corp_name in self.results_plot[pipeline]:
+                    res = self.results_plot[pipeline][corp_name]
                     data.append(res['wer_low'])
                     data.append(res['wer_high'])
                     xticks.extend([f"{corp_name}-Low", f"{corp_name}-High"])
@@ -222,7 +216,7 @@ class Evaluator:
                 plt.show()
             elif corp:
                 # Plot one corpus for one pipeline (one figure)
-                res = self.results[pipeline][corp]
+                res = self.results_plot[pipeline][corp]
                 data = [res['wer_low'], res['wer_high']]
                 xticks = [f"{corp}-Low", f"{corp}-High"]
                 plt.figure(figsize=(10, 6))
