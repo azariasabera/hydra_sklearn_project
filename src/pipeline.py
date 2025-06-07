@@ -18,7 +18,7 @@ def make_pipeline(steps: DictConfig) -> Pipeline:
     for step in steps:
 
         # get name of step and the target
-        name, target = step.items()[0]
+        name, target = next(iter(step.items())) # step.items()[0]
 
         # instantiate step, and append to step_tuples
         pipeline_step = (name, instantiate(target))
