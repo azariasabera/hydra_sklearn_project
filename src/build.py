@@ -29,8 +29,9 @@ class Builder:
         
         for k in cfg:
             if k.startswith("pipeline"):
-                self.pipelines.append(instantiate(cfg[k]), _recursive_=False) # False since we instantiate the steps in pipeline.py
+                self.pipelines.append(instantiate(cfg[k], _recursive_=False)) # False as each step is instantiated in pipeline.py
                 self.pipeline_names.append(k)
+                print(type(self.pipelines[-1]))
 
         self.plot = cfg.params.plot
         self.print_eval = cfg.params.print_eval
@@ -50,6 +51,11 @@ class Builder:
 
     def _single_pipeline_workflow(self):
         print('evaluated single pipeline')
+        for corp, data in self.splits.items():
+            y_bin = data['wer_train'] < 0.3
+            self.pipelines[0].fit(data['X_train'], y_bin)
+            y_pred = self.pipelines[0].predict_proba(data['X_test'])
+            print(y_pred[:1])
 
     def _compare_corpora(self):
         print('compared corpora')
