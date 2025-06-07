@@ -1,0 +1,14 @@
+# Python virtual environment
+venv/
+# csv files
+*.csv
+#pycache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+#.ipynb_checkpoints
+*.ipynb
+*.log
+#folder named outputs
+outputs/
