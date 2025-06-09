@@ -13,10 +13,3 @@ steps:
 
     - Select:
         _target_: noop.NoOp
-
-    - Model:
-        _target_: sklearn.linear_model.LogisticRegression
-        penalty: l2
-        C: 1.0
-        solver: lbfgs
-        max_iter: 1000
