@@ -2,6 +2,8 @@ from sklearn.base import ClassifierMixin, RegressorMixin
 from hydra.utils import get_class, instantiate
 from omegaconf import DictConfig
 from utils.evaluator import Evaluator
+from utils.visualizer import PreprocessingVisualizer
+
 
 import re
 
@@ -27,6 +29,7 @@ class Builder:
         self.pipelines = []
         self.pipeline_names = []
         self.models = []
+        self.preprocess_pipeline = None
         
         for k in cfg:
             if k.startswith("pipeline"):
@@ -48,6 +51,9 @@ class Builder:
                 pipeline_name = f"pipe{pipeline_num}-{model_name}"
                 
                 self.pipeline_names.append(pipeline_name)
+
+            if k == 'preprocess_pipeline':
+                self.preprocess_pipeline = instantiate(cfg[k], _recursive_=False)       
 
         self.plot = cfg.params.plot
         self.print_all_eval = cfg.params.print_all_eval
@@ -122,3 +128,16 @@ class Builder:
             else:
                 evaluator.plot_pr_curves(corp=self.corp_to_plot, plot_all_pipelines=True)
                 evaluator.plot_box(corp=self.corp_to_plot, plot_all_pipelines=True)
+
+    def preprocess(self):
+        visualizer = PreprocessingVisualizer()
+        X = self.X.to_numpy()
+        y = self.y.to_numpy()
+        #visualizer.plot_feature_histograms(X, feature_names=self.cfg.features.main_features)
+        #visualizer.plot_corr_heatmap(X, feature_names=self.cfg.features.main_features)
+
+        for corp, data in self.splits.items():
+            self.preprocess_pipeline.fit(data['X_train'], data['wer_train'])
+            visualizer.plot_feature_histograms(data['X_test'].to_numpy(), feature_names=self.cfg.features.main_features)
+            X_test_transform = self.preprocess_pipeline.transform(data['X_test']).to_numpy()
+            visualizer.plot_feature_histograms(X_test_transform, feature_names=self.cfg.features.main_features)
