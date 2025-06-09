@@ -1,8 +1,8 @@
 # @package: _global_
 defaults:
-  - pipeline1: linear_regression
-  - pipeline2: random_forest
-  - pipeline3: svm
+  - pipeline1: svm
+  #- pipeline2: svm
+  #- pipeline3: svm
   - _self_
 
 data_loader: data.data_loader.DataLoader
@@ -14,19 +14,21 @@ params:
   decision_threshold: 0.65 # to classify the predict_proba as class 1 or 0
   include_opensmile: false
   compare_corpora: false
-  compare_pipelines: true
-  plot: true # plot the results or not
+  compare_pipelines: false
+  plot: false # plot the results or not
   print_all_eval: false # if true prints evaluation for all corpus as test datasets
   corp_to_plot: WAR # change to BER, LUC, SOD, WAR (to plot all, make compare_corpora true)
 
 files:
   main_data: all_aclew_data_ds_notext.csv # includes highlevel features like snr, c50, etc.
   opensmile_data: all_opensmile.functional.csv # includes opensmile features like pitch, energy, etc.
+  processed_data: processed_data.csv # The main data processed using data_loader
 
 paths:
   main_path: ${hydra:runtime.cwd}/src/data/${files.main_data}
   opensmile_path: ${hydra:runtime.cwd}/src/data/${files.opensmile_data}
   log: ${hydra:runtime.cwd}/src/utils # not finished
+  processed_path: ${hydra:runtime.cwd}/src/data/${files.processed_data}
 
 data_types:
   file: str
