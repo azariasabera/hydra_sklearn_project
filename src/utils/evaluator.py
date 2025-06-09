@@ -76,6 +76,7 @@ class Evaluator:
                 print(f'\nAverage metrics over all corpora for {pipeline}:')
                 for k, v in avg.items():
                     print(f"{k}: {v:.4f}")
+                print()
         else:
             raise ValueError("Pipeline name ('pipeline') must be provided when calling print_metrics!")
 

@@ -79,13 +79,11 @@ class Builder:
                 #y_proba = pipeline.predict_proba(data['X_test'])
                 
                 if isinstance(model, ClassifierMixin):
-                    y_train_fit = y_train_bin
-                    pipeline.fit(data['X_train'], y_train_fit)
+                    pipeline.fit(data['X_train'], y_train_bin) # fit with labels
                     y_proba = pipeline.predict_proba(data['X_test'])[:,1]
                 
                 elif isinstance(model, RegressorMixin):
-                    y_train_fit = data['wer_train']
-                    pipeline.fit(data['X_train'], y_train_fit)
+                    pipeline.fit(data['X_train'], data['wer_train']) # fit with wer values
                     y_pred = pipeline.predict(data['X_test'])
                     y_proba = 1-y_pred # here i am saying that if regression gives 0.3 output then it mean 0.7 chance of being class 1
                 else:
