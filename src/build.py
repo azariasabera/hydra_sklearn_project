@@ -1,7 +1,7 @@
 from sklearn.base import ClassifierMixin, RegressorMixin
 from hydra.utils import get_class, instantiate
 from omegaconf import DictConfig
-import utils
+from utils.evaluator import Evaluator
 
 import re
 
@@ -66,7 +66,7 @@ class Builder:
             return self.build_evaluation()
     
     def build_evaluation(self):
-        evaluator = utils.Evaluator(
+        evaluator = Evaluator(
             class_threshold=self.class_threshold,
             decision_threshold=self.decision_threshold,
             plot=self.plot

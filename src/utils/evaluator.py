@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, recall_score, f1_score, precision_recall_curve, auc
+
 class Evaluator:
     def __init__(self, class_threshold, decision_threshold, plot=False):
         self.class_threshold = class_threshold
