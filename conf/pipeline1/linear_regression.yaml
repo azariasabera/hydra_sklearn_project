@@ -1,0 +1,19 @@
+_target_: pipeline.make_pipeline
+
+steps:
+    - Scale:
+        _target_: noop.NoOp
+        # params here
+
+    - Transform:
+        _target_: noop.NoOp
+
+    - Reduce:
+        _target_: noop.NoOp
+
+    - Select:
+        _target_: noop.NoOp
+
+    - Model:
+        _target_: sklearn.ensemble.RandomForestRegressor
+        
