@@ -10,7 +10,7 @@ class Evaluator:
         self.results_plot = {} # stores result for plot
 
     def evaluate(self, y_test, y_proba, corp=None, pipeline=None):
-        y_pred = y_proba[:,1] > self.decision_threshold
+        y_pred = y_proba > self.decision_threshold
         y_test_bin = y_test < self.class_threshold
 
         wer_low = y_test[y_pred == 1]
@@ -23,7 +23,7 @@ class Evaluator:
         recall = recall_score(y_test_bin, y_pred)
         f1 = f1_score(y_test_bin, y_pred)
 
-        precisions, recalls, _ = precision_recall_curve(y_test_bin, y_proba[:,1])
+        precisions, recalls, _ = precision_recall_curve(y_test_bin, y_proba)
         pr_auc = auc(recalls, precisions)
 
         result = {

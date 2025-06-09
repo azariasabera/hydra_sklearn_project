@@ -1,3 +1,4 @@
+from sklearn.base import ClassifierMixin, RegressorMixin
 from hydra.utils import get_class, instantiate
 from omegaconf import DictConfig
 import utils
@@ -25,6 +26,7 @@ class Builder:
         # Build all pipelines listed in config
         self.pipelines = []
         self.pipeline_names = []
+        self.models = []
         
         for k in cfg:
             if k.startswith("pipeline"):
@@ -39,6 +41,9 @@ class Builder:
                     model = pipeline.named_steps['model']
                 elif hasattr(pipeline, 'steps'):
                     model = pipeline.steps[-1][1]
+                
+                self.models.append(model)
+
                 model_name = type(model).__name__ if model is not None else 'UnknownModel'
                 pipeline_name = f"pipe{pipeline_num}-{model_name}"
                 
@@ -67,11 +72,24 @@ class Builder:
             plot=self.plot
         )
         
-        for pipeline, pipeline_name in zip(self.pipelines, self.pipeline_names):
+        for pipeline, model, pipeline_name in zip(self.pipelines, self.models, self.pipeline_names):
             for corp, data in self.splits.items():
                 y_train_bin = data['wer_train'] < self.cfg.params.class_threshold
-                pipeline.fit(data['X_train'], y_train_bin)
-                y_proba = pipeline.predict_proba(data['X_test'])
+                #pipeline.fit(data['X_train'], y_train_bin)
+                #y_proba = pipeline.predict_proba(data['X_test'])
+                
+                if isinstance(model, ClassifierMixin):
+                    y_train_fit = y_train_bin
+                    pipeline.fit(data['X_train'], y_train_fit)
+                    y_proba = pipeline.predict_proba(data['X_test'])[:,1]
+                
+                elif isinstance(model, RegressorMixin):
+                    y_train_fit = data['wer_train']
+                    pipeline.fit(data['X_train'], y_train_fit)
+                    y_pred = pipeline.predict(data['X_test'])
+                    y_proba = 1-y_pred # here i am saying that if regression gives 0.3 output then it mean 0.7 chance of being class 1
+                else:
+                    raise ValueError(f"Model in {pipeline_name} seems to be neither regressor not classifier")
 
                 evaluator.evaluate(
                     y_test=data['wer_test'],
