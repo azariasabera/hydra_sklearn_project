@@ -1,6 +1,15 @@
 _target_: pipeline.make_pipeline
 
 steps:
+    - SimpleImputer:
+        _target_: sklearn.impute.SimpleImputer
+        strategy: 'constant'
+        fill_value: -1
+
+
+    - StandardScaler:
+        _target_: sklearn.preprocessing.StandardScaler
+
     - Scale:
         _target_: noop.NoOp
         # params here
@@ -19,6 +28,6 @@ steps:
         kernel: linear
         C: 0.01
         probability: true
-        class_weight: {'0' : 1, '1' : 2}
+        class_weight: balanced #{'0': 1, '1': 2}
 
     

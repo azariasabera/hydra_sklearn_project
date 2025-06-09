@@ -1,7 +1,7 @@
 # @package: _global_
 defaults:
-  #- pipeline1: svm
-  #- pipeline2: logistic_regression
+  - pipeline1: linear_regression
+  - pipeline2: random_forest
   - pipeline3: svm
   - _self_
 
@@ -14,7 +14,7 @@ params:
   decision_threshold: 0.65 # to classify the predict_proba as class 1 or 0
   include_opensmile: false
   compare_corpora: false
-  compare_pipelines: false
+  compare_pipelines: true
   plot: true # plot the results or not
   print_all_eval: false # if true prints evaluation for all corpus as test datasets
   corp_to_plot: WAR # change to BER, LUC, SOD, WAR (to plot all, make compare_corpora true)
