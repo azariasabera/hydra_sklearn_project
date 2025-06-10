@@ -1,7 +1,8 @@
+from sklearn.base import ClassifierMixin, RegressorMixin
+
 """
 Custom pipeline for the WER classifier.
 """
-
 class CustomPipeline:
     def __init__(self, steps):
         self.steps = steps
@@ -14,7 +15,8 @@ class CustomPipeline:
                 is_found = True
                 return step
         if not is_found:
-            raise ValueError("step with name 'Model' not found")
+        #    raise ValueError("step with name 'Model' not found")
+            print("This is a preprocessing pipeline...")
 
     # wanted to call it fit_transform but to comply with the sklearn one and my implementation in build.py
     def fit(self, X_train, y_train):
@@ -38,7 +40,11 @@ class CustomPipeline:
             
         # Finally fit the model
         if hasattr(self.model, 'fit'):
-            self.model.fit(X, y)
+            if isinstance(self.model, ClassifierMixin):
+                y = (y < 0.3).astype(int) # REPLACE THIS WITH src.params.class_threshold
+                self.model.fit(X, y)
+            if isinstance(self.model, RegressorMixin):
+                self.model.fit(X, y)
         return X, y
 
     def transform(self, X_test):

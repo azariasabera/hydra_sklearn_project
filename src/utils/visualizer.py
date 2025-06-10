@@ -21,6 +21,15 @@ class PreprocessingVisualizer:
         plt.tight_layout()
         plt.show(block=False)
 
+    def plot_wer_histogram(self, y, bins=30):
+        plt.figure(figsize=(5, 10))
+        plt.hist(y, bins=bins, alpha=0.7, color='skyblue', edgecolor='black')
+        plt.title(f"WER hisogram")
+        plt.xlabel("WER")
+        plt.tight_layout()
+        plt.show(block=False)
+
+
     def plot_feature_boxplots(self, X, feature_names=None, title="Feature Boxplots"):
         feature_names = feature_names or self.feature_names or [f"Feature {i}" for i in range(X.shape[1])]
         plt.figure(figsize=(max(10, X.shape[1]*0.7), 6))

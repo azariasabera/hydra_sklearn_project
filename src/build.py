@@ -4,7 +4,6 @@ from omegaconf import DictConfig
 from utils.evaluator import Evaluator
 from utils.visualizer import PreprocessingVisualizer
 
-
 import re
 
 
@@ -80,16 +79,14 @@ class Builder:
         
         for pipeline, model, pipeline_name in zip(self.pipelines, self.models, self.pipeline_names):
             for corp, data in self.splits.items():
-                y_train_bin = data['wer_train'] < self.cfg.params.class_threshold
-                #pipeline.fit(data['X_train'], y_train_bin)
-                #y_proba = pipeline.predict_proba(data['X_test'])
                 
+                # We always pass the continuous wer, for classification models and steps that need labeled wer, we do that explicitly!
+                pipeline.fit(data['X_train'], data['wer_train'])
+
                 if isinstance(model, ClassifierMixin):
-                    pipeline.fit(data['X_train'], y_train_bin) # fit with labels
                     y_proba = pipeline.predict_proba(data['X_test'])[:,1]
                 
                 elif isinstance(model, RegressorMixin):
-                    pipeline.fit(data['X_train'], data['wer_train']) # fit with wer values
                     y_pred = pipeline.predict(data['X_test'])
                     y_proba = 1-y_pred # here i am saying that if regression gives 0.3 output then it mean 0.7 chance of being class 1
                 else:
@@ -133,11 +130,16 @@ class Builder:
         visualizer = PreprocessingVisualizer()
         X = self.X.to_numpy()
         y = self.y.to_numpy()
+        visualizer.plot_wer_histogram(y)
         #visualizer.plot_feature_histograms(X, feature_names=self.cfg.features.main_features)
         #visualizer.plot_corr_heatmap(X, feature_names=self.cfg.features.main_features)
 
         for corp, data in self.splits.items():
             self.preprocess_pipeline.fit(data['X_train'], data['wer_train'])
-            visualizer.plot_feature_histograms(data['X_test'].to_numpy(), feature_names=self.cfg.features.main_features)
             X_test_transform = self.preprocess_pipeline.transform(data['X_test']).to_numpy()
-            visualizer.plot_feature_histograms(X_test_transform, feature_names=self.cfg.features.main_features)
+            
+            # Test data before preprocessing
+            visualizer.plot_feature_histograms(data['X_test'].to_numpy(), feature_names=self.cfg.features.main_features)
+            # After preprocessing
+            visualizer.plot_feature_histograms(X_test_transform)#, feature_names=self.cfg.features.main_features)
+            break

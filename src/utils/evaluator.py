@@ -11,8 +11,8 @@ class Evaluator:
         self.results_plot = {} # stores result for plot
 
     def evaluate(self, y_test, y_proba, corp=None, pipeline=None):
-        y_pred = y_proba > self.decision_threshold
-        y_test_bin = y_test < self.class_threshold
+        y_pred = (y_proba > self.decision_threshold).astype(int)
+        y_test_bin = (y_test < self.class_threshold).astype(int)
 
         wer_low = y_test[y_pred == 1]
         wer_high = y_test[y_pred == 0]
