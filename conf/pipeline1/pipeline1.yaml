@@ -1,24 +1,27 @@
-_target_: pipeline.make_pipeline
+_target_: pipeline.make_custom_pipeline
 
 steps:
     - Scale:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
+       # _target_: sklearn.preprocessing.StandardScaler
         # params here
 
     - Transform:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Reduce: # or expand eg PolynomialFeatures
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Select:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
+        #_target_: custom_preprocess.mutual_info.MutualInformation
+        #threshold: 0.1
 
     - Model:
         _target_: sklearn.svm.SVC
         kernel: linear
         C: 0.01
         probability: true
-        #class_weight: {'0' : 1, '1' : 2}
+        #class_weight: {0: 1, 1: 2}
 
     

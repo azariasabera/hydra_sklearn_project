@@ -2,17 +2,17 @@ _target_: pipeline.make_pipeline
 
 steps:
     - Scale:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
         # params here
 
     - Transform:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Reduce:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Select:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Model:
         _target_: sklearn.linear_model.LogisticRegression

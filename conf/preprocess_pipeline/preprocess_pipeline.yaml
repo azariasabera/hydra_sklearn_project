@@ -1,15 +1,15 @@
-_target_: pipeline.make_pipeline
+_target_: pipeline.make_custom_pipeline
 
 steps:
     - Scale:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
         # params here
 
     - Transform:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Reduce:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Select:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.mutual_info.MutualInformation

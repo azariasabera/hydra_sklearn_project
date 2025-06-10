@@ -1,25 +1,29 @@
-_target_: pipeline.make_pipeline
+_target_: pipeline.make_custom_pipeline
 
 steps:
     - Scale:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
         # params here
 
     - Transform:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Reduce:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Select:
-        _target_: noop.NoOp
+        _target_: custom_preprocess.noop.NoOp
 
     - Model:
-        _target_: sklearn.ensemble.RandomForestClassifier
-        n_estimators: 100
-        max_depth: 10
-        min_samples_split: 2
-        min_samples_leaf: 1
-        max_features: 'sqrt'
-        bootstrap: true
-        random_state: 42
+        _target_: sklearn.svm.SVC
+        kernel: linear
+        C: 0.01
+        probability: true
+        #_target_: sklearn.ensemble.RandomForestClassifier
+        #n_estimators: 100
+        #max_depth: 10
+        #min_samples_split: 2
+        #min_samples_leaf: 1
+        #max_features: 'sqrt'
+        #bootstrap: true
+        #random_state: 42
